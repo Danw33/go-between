@@ -20,7 +20,7 @@ go run ./src/go-between.go [flags]
 
 ### Build and run
 
-To compile go-between from source to an executable, then run it, use the following commands:
+To compile go-between from source to an executable binary, then run it, use the following commands:
 
 ```
 go build ./src/go-between.go
@@ -29,6 +29,14 @@ chmod +X ./go-between
 ```
 
 (where `[flags]` is a sequence of arguments to configure the application)
+
+By default, the go compiler will include a symbol table. To build without this the following can be used:
+
+```
+go build -ldflags "-s -w" ./src/go-between.go
+```
+
+While this produces a smaller output binary, crashes would yield no real usable stack trace information.
 
 ### Flags
 The go-between application can take a number of runtime arguments (flags) to configure various aspects of the program.
