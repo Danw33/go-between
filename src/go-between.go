@@ -1,7 +1,7 @@
 // go-between - https://github.com/Danw33/go-between/
 // Copyright (C) 2017 Daniel Wilson - @Danw33
 // MIT License - see LICENSE.md for conditions of use
-package gobetween
+package main
 
 import (
   "time"
