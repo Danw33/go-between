@@ -1,0 +1,15 @@
+[Unit]
+Description=go-between server
+After=syslog.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/go-between
+MemoryLimit=512M
+Restart=always
+RestartSec=10
+StartLimitInterval=0
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
