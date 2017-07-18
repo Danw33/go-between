@@ -14,6 +14,7 @@ import (
   "syscall"
   "net/url"
   "net/http"
+  "sync/atomic"
   "database/sql"
   "encoding/json"
   "github.com/gorilla/mux"
@@ -43,6 +44,11 @@ var (
 
   // DB Connection Pointer
   db *sql.DB;
+
+  // Statistical Counters
+  requests uint64 = 0
+  responses uint64 = 0
+  mem runtime.MemStats
 )
 
 // Blocking (sleep) function for main thread
@@ -122,6 +128,9 @@ func shutdown(db *sql.DB) {
     log.Printf(" - Using DB Pointer [%p]", &db)
   }
   db.Close()
+
+  log.Printf("Stats: %d requests", atomic.LoadUint64(&requests))
+  log.Printf("Stats: %d responses", atomic.LoadUint64(&responses))
 
   log.Println("Clean shutdown sequenece completed.")
   os.Exit(0)
@@ -353,6 +362,9 @@ func transmit(responseWriter http.ResponseWriter, responseData Response) {
   }
 
   responseWriter.Write(b)
+
+  atomic.AddUint64(&responses, 1)
+
 }
 
 // Logs a HTTP request (with debug information, where enabled)
@@ -360,8 +372,11 @@ func logRequest(req *http.Request) {
 
   log.Printf("API: Handling %s %s request from %s to %s", req.Proto, req.Method, req.RemoteAddr, req.URL)
 
+  atomic.AddUint64(&requests, 1)
+
   if debug {
     log.Printf(" - Request Pointer [%p]", &req)
+    log.Printf(" - Request Number: %d", atomic.LoadUint64(&requests))
     log.Printf(" - Request Data: %s", req)
   }
 
@@ -391,6 +406,14 @@ func outputStatusWebResponse(response http.ResponseWriter, req *http.Request) {
   healthData["started"] = fmt.Sprintf("%d", startTime.UnixNano());
   healthData["uptime"] = fmt.Sprintf("%d", getAppUptime());
   healthData["version"] = fmt.Sprintf("%s", version);
+  healthData["requests"] = fmt.Sprintf("%d", atomic.LoadUint64(&requests));
+  healthData["responses"] = fmt.Sprintf("%d", atomic.LoadUint64(&responses));
+
+  runtime.ReadMemStats(&mem)
+  healthData["mem_allocated"] = fmt.Sprintf("%d", mem.Alloc);
+  healthData["mem_total_allocated"] = fmt.Sprintf("%d", mem.TotalAlloc);
+  healthData["mem_heap_allocated"] = fmt.Sprintf("%d", mem.HeapAlloc);
+  healthData["mem_heap_system"] = fmt.Sprintf("%d", mem.HeapSys);
 
   responseData := Response{"success", "System functional", time.Now().UnixNano(), ResponseData{healthData}}
 
