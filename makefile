@@ -6,15 +6,22 @@
 # Default: Make the "build" version without debug symbols
 all: build
 
-# Build without debug symbols (Smaller output executable)
+# Build without debug symbols and pack using UPX (smallest possible output)
+packed: build pack
+
+# Build without debug symbols (Smaller output executable) for the current OS and Arch
 build:
 	go build -ldflags "-s -w" ./src/go-between.go
 	if [ -a ./go-between ]; then chmod +X ./go-between; fi;
 
-# Debug build with debug symbols (Larger output executable)
+# Debug build with debug symbols (Larger output executable) for the current OS and Arch
 debug:
 	go build ./src/go-between.go
 	if [ -a ./go-between ]; then chmod +X ./go-between; fi;
+
+# Pack the compiled file using UPX
+pack:
+	if [ -a ./go-between ]; then upx -9 -v ./go-between; fi;
 
 # Install the build (with systemd service if the host OS uses systemd)
 install:
